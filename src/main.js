@@ -12,8 +12,8 @@ const mapWeatherDescription = weather => ({
   'clear sky': '☀️',
   'overcast clouds': '☁️️',
   'light rain': '🌧',
-  'moderate rain': '🌧',
-  'heavy intensity rain': '🌧🌧',
+  'moderate rain': '🌧🌧',
+  'heavy intensity rain': '🌧🌧🌧',
 })[weather] || weather;
 
 const getWeatherData = async () => {
@@ -22,11 +22,28 @@ const getWeatherData = async () => {
   ).body.list;
 
   return result.filter((_, index) => index < 5)
-    .map(entry => `${moment.unix(entry.dt).format('HH A')}: ${entry.weather.map(weather => mapWeatherDescription(weather.description)).join(' ')} ${(entry.main.temp - 273.15).toFixed(0)}°C`).join('\n')
+    .map(
+      entry => `${moment.unix(entry.dt).format('HH A')}: ${entry.weather
+        .map(
+          weather => mapWeatherDescription(weather.description)
+        )
+        .join(' ')} ${(entry.main.temp - 273.15).toFixed(0)}°C`
+    );
+};
+
+const getTodos = async () => {
+  const result = await superagent.get('https://habitica.com/api/v3/tasks/user?type=todos')
+    .set('x-api-user', process.env.HABITICA_USER_ID)
+    .set('x-api-key', process.env.HABITICA_API_TOKEN);
+
+  return result.body.data.map(e => e.text);
 };
 
 exports.main = async () => {
-  const data = await getWeatherData();
+  const output = ['Wetter:']
+    .concat(await getWeatherData())
+    .concat(['', 'Todos:'])
+    .concat(await getTodos());
 
-  await sendMessage(data);
+  await sendMessage(output.join('\n'));
 };

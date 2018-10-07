@@ -14,6 +14,8 @@ provider "aws" {
 variable "token" {}
 variable "chat_id" {}
 variable "weather_api_appid" {}
+variable "habitica_user_id" {}
+variable "habitica_api_token" {}
 
 resource "aws_iam_role" "alfred" {
   name = "alfred"
@@ -52,9 +54,11 @@ resource "aws_lambda_function" "alfred" {
   source_code_hash               = "${data.archive_file.alfred.output_base64sha256}",
   environment {
     variables = {
-      TOKEN =             "${var.token}"
-      CHAT_ID =           "${var.chat_id}"
-      WEATHER_API_APPID = "${var.weather_api_appid}"
+      TOKEN =              "${var.token}"
+      CHAT_ID =            "${var.chat_id}"
+      WEATHER_API_APPID =  "${var.weather_api_appid}"
+      HABITICA_USER_ID =   "${var.habitica_user_id}"
+      HABITICA_API_TOKEN = "${var.habitica_api_token}"
     }
   }
 }
