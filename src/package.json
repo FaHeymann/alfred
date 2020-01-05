@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "moment": "~2.22.2",
-    "superagent": "~3.8.3"
+    "moment": "~2.24.0",
+    "superagent": "~5.1.3"
   }
 }

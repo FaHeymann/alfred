@@ -1,5 +1,5 @@
 terraform {
-  required_version = "0.11.7"
+  required_version = ">=0.12.18"
   backend "s3" {
     bucket = "fh-terraform-states"
     key    = "alfred"
@@ -8,14 +8,20 @@ terraform {
 }
 
 provider "aws" {
-  region  = "eu-central-1"
+  region = "eu-central-1"
 }
 
-variable "token" {}
-variable "chat_id" {}
-variable "weather_api_appid" {}
-variable "habitica_user_id" {}
-variable "habitica_api_token" {}
+variable "token" {
+}
+
+variable "chat_id" {
+}
+
+variable "weather_api_appid" {
+}
+
+variable "todoist_api_token" {
+}
 
 resource "aws_iam_role" "alfred" {
   name = "alfred"
@@ -35,6 +41,7 @@ resource "aws_iam_role" "alfred" {
   ]
 }
 EOF
+
 }
 
 data "archive_file" "alfred" {
@@ -44,43 +51,43 @@ data "archive_file" "alfred" {
 }
 
 resource "aws_lambda_function" "alfred" {
-  filename                       = "${data.archive_file.alfred.output_path}"
+  filename                       = data.archive_file.alfred.output_path
   function_name                  = "alfred"
-  role                           = "${aws_iam_role.alfred.arn}"
+  role                           = aws_iam_role.alfred.arn
   handler                        = "main.main"
-  runtime                        = "nodejs8.10"
+  runtime                        = "nodejs12.x"
   timeout                        = 60
   reserved_concurrent_executions = 1
-  source_code_hash               = "${data.archive_file.alfred.output_base64sha256}",
+  source_code_hash               = data.archive_file.alfred.output_base64sha256
   environment {
     variables = {
-      TOKEN =              "${var.token}"
-      CHAT_ID =            "${var.chat_id}"
-      WEATHER_API_APPID =  "${var.weather_api_appid}"
-      HABITICA_USER_ID =   "${var.habitica_user_id}"
-      HABITICA_API_TOKEN = "${var.habitica_api_token}"
+      TOKEN             = var.token
+      CHAT_ID           = var.chat_id
+      WEATHER_API_APPID = var.weather_api_appid
+      TODOIST_API_TOKEN = var.todoist_api_token
     }
   }
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_trigger_lambda" {
-  statement_id   = "AllowExecutionFromCloudWatch"
-  action         = "lambda:InvokeFunction"
-  function_name  = "${aws_lambda_function.alfred.function_name}"
-  principal      = "events.amazonaws.com"
-  source_arn     = "${aws_cloudwatch_event_rule.alfred.arn}"
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.alfred.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.alfred.arn
 }
 
 resource "aws_cloudwatch_event_rule" "alfred" {
-  name = "alfred"
+  name        = "alfred"
   description = "Alfred"
 
-  schedule_expression = "cron(0 5,10,15 * * ? *)"
+  schedule_expression = "cron(0 5,11,16 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "alfred" {
-  rule = "${aws_cloudwatch_event_rule.alfred.name}"
-  arn = "${aws_lambda_function.alfred.arn}"
+  rule = aws_cloudwatch_event_rule.alfred.name
+  arn  = aws_lambda_function.alfred.arn
 
   input = "{}"
 }
+

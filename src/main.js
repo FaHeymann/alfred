@@ -24,19 +24,20 @@ const getWeatherData = async () => {
   return result.filter((_, index) => index < 5)
     .map(
       entry => `${moment.unix(entry.dt).format('HH A')}: ${entry.weather
-        .map(
-          weather => mapWeatherDescription(weather.description)
-        )
+        .map(weather => mapWeatherDescription(weather.description))
         .join(' ')} ${(entry.main.temp - 273.15).toFixed(0)}°C`
     );
 };
 
 const getTodos = async () => {
-  const result = await superagent.get('https://habitica.com/api/v3/tasks/user?type=todos')
-    .set('x-api-user', process.env.HABITICA_USER_ID)
-    .set('x-api-key', process.env.HABITICA_API_TOKEN);
+  const result = await superagent.get('https://api.todoist.com/rest/v1/tasks')
+    .set('Authorization', `Bearer ${process.env.TODOIST_API_TOKEN}`);
 
-  return result.body.data.map(e => e.text);
+  const filtered = result.body
+    .filter(entry => entry.due && moment(entry.due.date).isBefore(moment(new Date())))
+    .map(entry => entry.content);
+
+  return filtered.length > 0 ? filtered : ['None 🙃'];
 };
 
 exports.main = async () => {
