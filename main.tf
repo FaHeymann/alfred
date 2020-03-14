@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">=0.12.18"
+  required_version = ">=0.12.21"
   backend "s3" {
     bucket = "fh-terraform-states"
     key    = "alfred"
@@ -23,25 +23,19 @@ variable "weather_api_appid" {
 variable "todoist_api_token" {
 }
 
-resource "aws_iam_role" "alfred" {
-  name = "alfred"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+data "aws_iam_policy_document" "alfred_trust_relationship" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
     }
-  ]
+  }
 }
-EOF
 
+resource "aws_iam_role" "alfred" {
+  name               = "alfred"
+  assume_role_policy = data.aws_iam_policy_document.alfred_trust_relationship.json
 }
 
 data "archive_file" "alfred" {
