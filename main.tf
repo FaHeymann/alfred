@@ -1,5 +1,13 @@
 terraform {
-  required_version = ">=0.12.21"
+  required_version = ">=1.2"
+  required_providers {
+    archive = {
+      source = "hashicorp/archive"
+    }
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
   backend "s3" {
     bucket = "fh-terraform-states"
     key    = "alfred"
@@ -49,7 +57,7 @@ resource "aws_lambda_function" "alfred" {
   function_name                  = "alfred"
   role                           = aws_iam_role.alfred.arn
   handler                        = "main.main"
-  runtime                        = "nodejs12.x"
+  runtime                        = "nodejs16.x"
   timeout                        = 60
   reserved_concurrent_executions = 1
   source_code_hash               = data.archive_file.alfred.output_base64sha256
@@ -76,6 +84,8 @@ resource "aws_cloudwatch_event_rule" "alfred" {
   description = "Alfred"
 
   schedule_expression = "cron(0 5,11,16 * * ? *)"
+
+  is_enabled = false
 }
 
 resource "aws_cloudwatch_event_target" "alfred" {

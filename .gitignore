@@ -1,4 +1,4 @@
 alfred.zip
 secret.tfvars
-.terraform
+.terraform*
 src/node_modules
