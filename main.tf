@@ -57,7 +57,7 @@ resource "aws_lambda_function" "alfred" {
   function_name                  = "alfred"
   role                           = aws_iam_role.alfred.arn
   handler                        = "main.main"
-  runtime                        = "nodejs16.x"
+  runtime                        = "nodejs20.x"
   timeout                        = 60
   reserved_concurrent_executions = 1
   source_code_hash               = data.archive_file.alfred.output_base64sha256
